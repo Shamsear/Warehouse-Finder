@@ -1,8 +1,9 @@
+import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL,
-});
+const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {});
+const prisma = new PrismaClient({ adapter });
 
 // Sample warehouses for testing the dashboard before live scraping
 const sampleWarehouses = [
@@ -53,8 +54,8 @@ async function main() {
         },
       });
       created++;
-    } catch (e) {
-      // Skip duplicates
+    } catch (e: any) {
+      console.error(`  Failed: ${w.name} — ${e.message}`);
     }
   }
 
