@@ -1,0 +1,88 @@
+// Warehouse Directory — UAE & Qatar
+// Full schema for Neon Postgres
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Warehouse {
+  id              Int       @id @default(autoincrement())
+  name            String
+  address         String?
+  city            String?
+  country         String    // "UAE" | "Qatar"
+  freeZone        String?   // "JAFZA", "KIZAD", etc.
+  phone           String?
+  email           String?
+  website         String?
+  lat             Float?
+  lng             Float?
+  rating          Float?
+  source          String    // "google_places" | "jafza" | "yellowpages" | etc.
+  sourceUrl       String?   // original URL
+
+  // Pipeline tracking
+  status          String    @default("new")
+  // new | contacted | replied | interested | meeting_set | ready | closed | not_interested | no_response | follow_up
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+  priority        String    @default("normal") // low | normal | high | urgent
+
+  notes           String?
+  tags            String[]  // ["cold-storage", "3pl", "ecommerce"]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  messages        Message[]
+  contacts        Contact[]
+
+  @@index([country, city])
+  @@index([status])
+  @@index([freeZone])
+}
+
+model Contact {
+  id              Int       @id @default(autoincrement())
+  warehouseId     Int
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  name            String
+  title           String?   // "Owner", "Manager", "Procurement"
+  phone           String?
+  email           String?
+  linkedinUrl     String?
+  isPrimary       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  content     String
+  sentAt      DateTime @default(now())
+  direction   String   // "outgoing" | "incoming"
+}
+
+model MessageTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String
+  body      String
+  language  String   @default("en")
+  createdAt DateTime @default(now())
+}
+
+model ScrapeLog {
+  id        Int      @id @default(autoincrement())
+  source    String
+  country   String
+  results   Int
+  status    String   // "success" | "error"
+  error     String?
+  runAt     DateTime @default(now())
+}
