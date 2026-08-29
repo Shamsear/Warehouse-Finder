@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "🏭 Warehouse Directory — UAE & Qatar",
+  title: "Warehouse Finder — UAE & Qatar",
   description: "Warehouse discovery and ERP pitch pipeline for UAE & Qatar",
 };
 
