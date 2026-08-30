@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import {
   Warehouse as WarehouseIcon, Search, Phone, Mail, Globe, MapPin,
   Download, Plus, Filter, Close, ChevronLeft, ChevronRight,
-  Send, Scrape, Building, Users, MessageSquare, Clock,
-  Check, AlertCircle, ExternalLink, Note, WhatsApp,
+  Send, Building, Users, MessageSquare, Clock,
+  ExternalLink, Note, WhatsApp,
 } from "@/components/icons";
 
 // ── Types ──
@@ -113,7 +113,7 @@ function StatCard({ icon: Icon, label, value, accent }: { icon: React.ElementTyp
 }
 
 // ── Empty State ──
-function EmptyState({ onScrape }: { onScrape: () => void }) {
+function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-20">
       <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-5">
@@ -121,15 +121,15 @@ function EmptyState({ onScrape }: { onScrape: () => void }) {
       </div>
       <h3 className="text-lg font-semibold text-slate-900 mb-1">No warehouses yet</h3>
       <p className="text-sm text-slate-500 mb-6 text-center max-w-sm">
-        Discover warehouses across UAE and Qatar by running a scrape, or add one manually.
+        Add warehouses across UAE and Qatar to start building your pipeline.
       </p>
       <div className="flex gap-3">
         <button
-          onClick={onScrape}
+          onClick={onAdd}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          <Scrape size={16} />
-          Discover Warehouses
+          <Plus size={16} />
+          Add Warehouse
         </button>
       </div>
     </div>
@@ -142,8 +142,7 @@ export default function Dashboard() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scraping, setScraping] = useState(false);
-  const [scrapeStatus, setScrapeStatus] = useState<{ type: "success" | "error" | "running"; message: string } | null>(null);
+
 
   // Filters
   const [search, setSearch] = useState("");
@@ -229,29 +228,6 @@ export default function Dashboard() {
     });
   };
 
-  const triggerScrape = async () => {
-    setScraping(true);
-    setScrapeStatus({ type: "running", message: "Scraping warehouses from web sources..." });
-    try {
-      const res = await fetch("/api/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "all" }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setScrapeStatus({ type: "success", message: `Found ${data.totalNew} new warehouses` });
-        fetchData();
-      } else {
-        setScrapeStatus({ type: "error", message: data.error || "Scrape failed" });
-      }
-    } catch {
-      setScrapeStatus({ type: "error", message: "Request failed" });
-    }
-    setScraping(false);
-    setTimeout(() => setScrapeStatus(null), 5000);
-  };
-
   const openWhatsApp = async (warehouse: Warehouse, message: string) => {
     if (!warehouse.phone) return;
     await fetch(`/api/warehouses/${warehouse.id}/messages`, {
@@ -317,19 +293,6 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            {scrapeStatus && (
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                scrapeStatus.type === "running" ? "bg-blue-50 text-blue-700" :
-                scrapeStatus.type === "success" ? "bg-emerald-50 text-emerald-700" :
-                "bg-rose-50 text-rose-700"
-              }`}>
-                {scrapeStatus.type === "running" && <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />}
-                {scrapeStatus.type === "success" && <Check size={14} />}
-                {scrapeStatus.type === "error" && <AlertCircle size={14} />}
-                {scrapeStatus.message}
-              </div>
-            )}
-
             <button onClick={exportCSV} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
               <Download size={15} />
               Export
@@ -338,18 +301,7 @@ export default function Dashboard() {
               <Plus size={15} />
               Add
             </button>
-            <button
-              onClick={triggerScrape}
-              disabled={scraping}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
-              {scraping ? (
-                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Scrape size={15} />
-              )}
-              Scrape
-            </button>
+
           </div>
         </div>
       </header>
@@ -460,7 +412,7 @@ export default function Dashboard() {
               </div>
             </div>
           ) : warehouses.length === 0 ? (
-            <EmptyState onScrape={triggerScrape} />
+            <EmptyState onAdd={() => setShowAdd(true)} />
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <table className="w-full">

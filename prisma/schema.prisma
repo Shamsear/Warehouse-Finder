@@ -77,12 +77,4 @@ model MessageTemplate {
   createdAt DateTime @default(now())
 }
 
-model ScrapeLog {
-  id        Int      @id @default(autoincrement())
-  source    String
-  country   String
-  results   Int
-  status    String   // "success" | "error"
-  error     String?
-  runAt     DateTime @default(now())
-}
+
